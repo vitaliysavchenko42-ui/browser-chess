@@ -1,7 +1,7 @@
 /* Компьютерный противник: минимакс с альфа-бета отсечением.
-   Уровни: 1 — новичок (шумная оценка, маленькая глубина),
-           2 — средний (глубина 2),
-           3 — сильный (глубина до 3–4 с ограничением времени). */
+   Сила задаётся параметрами: { depth, time, jitter }.
+   depth — глубина поиска, time — лимит времени на ход (мс),
+   jitter — случайный разброс оценки в корне (слабость ранних уровней). */
 
 (function () {
   'use strict';
@@ -106,7 +106,7 @@
 
   function search(s, depth, alpha, beta) {
     NODES++;
-    if ((NODES & 1023) === 0 && Date.now() > DEADLINE) throw OUT_OF_TIME;
+    if ((NODES & 511) === 0 && Date.now() > DEADLINE) throw OUT_OF_TIME;
     var moves = C.generateMoves(s);
     if (moves.length === 0) {
       return C.inCheck(s, s.turn) ? -99999 : 0; // мат или пат
@@ -124,23 +124,16 @@
     return best;
   }
 
-  // Выбор хода. level: 1..3. Возвращает ход из списка legal (или null).
-  function chooseMove(state, legalMoves, level) {
+  // Выбор хода по параметрам params = { depth, time, jitter }.
+  // Возвращает ход из списка legal (или null).
+  function chooseMove(state, legalMoves, params) {
     if (!legalMoves || !legalMoves.length) return null;
     if (legalMoves.length === 1) return legalMoves[0];
 
-    if (level === 1) {
-      // Новичок: случайный ход из трети лучших по оценке глубины 1
-      var scored = legalMoves.map(function (m) {
-        var a = C.makeMove(state, m);
-        return { m: m, v: evalFor(a) };
-      }).sort(function (x, y) { return y.v - x.v; });
-      var pool = scored.slice(0, Math.max(3, Math.ceil(scored.length / 3)));
-      return pool[Math.floor(Math.random() * pool.length)].m;
-    }
+    var depth = params && params.depth ? params.depth : 1;
+    var timeLimit = params && params.time ? params.time : 600;
+    var jitter = params && params.jitter ? params.jitter : 0;
 
-    var maxDepth = level === 2 ? 2 : 3;
-    var timeLimit = level === 3 ? 1400 : 700;
     NODES = 0;
     DEADLINE = Date.now() + timeLimit;
 
@@ -148,15 +141,15 @@
     var best = ordered[0];
 
     try {
-      for (var depth = 1; depth <= maxDepth; depth++) {
+      for (var d = 1; d <= depth; d++) {
         var alpha = -Infinity, localBest = null, localScore = -Infinity;
         for (var m of ordered) {
-          var v = -search(C.makeMove(state, m), depth - 1, -Infinity, -alpha);
+          var v = -search(C.makeMove(state, m), d - 1, -Infinity, -alpha);
+          if (jitter) v += (Math.random() - 0.5) * 2 * jitter;
           if (v > localScore) { localScore = v; localBest = m; }
           if (v > alpha) alpha = v;
         }
         if (localBest) best = localBest;
-        ordered = orderMoves(legalMoves);
       }
     } catch (e) {
       if (e !== OUT_OF_TIME) throw e;

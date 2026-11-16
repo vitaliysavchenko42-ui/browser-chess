@@ -1,4 +1,4 @@
-/* Шахматы в браузере — стили. Мобильный приоритет: доска впишется в любой экран. */
+/* Шахматы в браузере — стили v2: SVG-фигуры, анимация хода, карта уровней. */
 
 :root {
   --bg: #f4f1ea;
@@ -12,7 +12,8 @@
   --dot: rgba(47, 111, 79, .55);   /* точка пустого хода */
   --ring: rgba(220, 70, 40, .85);  /* кольцо взятия */
   --check: rgba(220, 40, 40, .8);  /* король под шахом */
-  --last: rgba(232, 179, 58, .35); /* последний ход */
+  --last: rgba(232, 179, 58, .45); /* последний ход */
+  --lock: #c9c2b4;
 }
 
 * { box-sizing: border-box; }
@@ -26,10 +27,12 @@ body {
 }
 
 .wrap {
-  max-width: 560px;
+  max-width: 640px;
   margin: 0 auto;
   padding: 12px 12px 28px;
 }
+
+.hidden { display: none !important; }
 
 .topbar {
   display: flex;
@@ -40,6 +43,8 @@ body {
 }
 
 .brand { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+.brand.small { font-size: 16px; }
+.brand .icon { margin-right: 4px; }
 
 .status {
   font-size: 14px;
@@ -48,12 +53,91 @@ body {
   border-radius: 10px;
   background: var(--panel);
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  white-space: nowrap;
 }
 
 .status.check { color: #b3261e; }
 .status.over  { color: var(--accent); }
 
-/* Доска: квадрат, ширина = min(доступная ширина, 520px) */
+.back-btn {
+  min-width: 38px; min-height: 38px;
+  font-size: 18px;
+  border: 1px solid #d8d3c8;
+  border-radius: 10px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+/* ---------- Экран карты уровней ---------- */
+
+.progress-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+.map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.level-card {
+  background: var(--panel);
+  border: 1px solid #e3ddd0;
+  border-radius: 14px;
+  padding: 14px 12px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.level-card:active { transform: scale(.98); }
+
+.level-card .num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.level-card .name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 2px 0 4px;
+}
+
+.level-card .desc { font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+.level-card .mark {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: #eef3ef;
+  color: var(--accent);
+}
+
+.level-card.locked { opacity: .55; cursor: not-allowed; }
+.level-card.locked .num { color: var(--lock); }
+.level-card.locked .mark { background: #f1ede4; color: var(--muted); }
+
+.level-card.done { border-color: var(--accent); box-shadow: 0 1px 6px rgba(47,111,79,.18); }
+.level-card.done .mark { background: var(--accent); color: #fff; }
+
+.wide-btn {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid #d8d3c8;
+  border-radius: 12px;
+  background: var(--panel);
+  cursor: pointer;
+}
+.wide-btn:active { background: #efeadf; }
+
+/* ---------- Экран партии ---------- */
+
 .board-zone { display: flex; justify-content: center; }
 
 .board {
@@ -72,9 +156,6 @@ body {
 
 .square {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -87,21 +168,28 @@ body {
   position: absolute;
   font-size: 10px;
   line-height: 1;
-  color: rgba(0,0,0,.35);
+  color: rgba(0,0,0,.4);
   pointer-events: none;
 }
 .square .coord.file { right: 3px; bottom: 2px; }
 .square .coord.rank { left: 3px; top: 2px; }
+.square.dark .coord { color: rgba(255,255,255,.55); }
 
+/* Фигура: SVG, строго по центру клетки */
 .piece {
-  font-size: min(8.2vw, 44px);
-  line-height: 1;
-  pointer-events: none; /* клик ловит клетка */
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.piece.white { color: #fdfdf7; text-shadow: 0 0 1px #333, 0 0 2px #444; }
-.piece.black { color: #1d1d1f; text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+.piece svg { width: 84%; height: 84%; }
+
+/* прорезь слона и глаз коня — контрастные к цвету фигуры */
+.piece.w .cut { fill: rgba(0,0,0,.42); }
+.piece.b .cut { fill: rgba(255,255,255,.5); }
 
 .square.selected { box-shadow: inset 0 0 0 3px var(--sel); }
 
@@ -111,6 +199,8 @@ body {
   height: 22%;
   border-radius: 50%;
   background: var(--dot);
+  left: 39%;
+  top: 39%;
   pointer-events: none;
 }
 
@@ -122,9 +212,7 @@ body {
   pointer-events: none;
 }
 
-.square.check-glow {
-  box-shadow: inset 0 0 0 3px var(--check);
-}
+.square.check-glow { box-shadow: inset 0 0 0 3px var(--check); }
 
 .square.last-from, .square.last-to {
   outline: 2px solid var(--last);
@@ -146,10 +234,11 @@ body {
   gap: 8px;
 }
 
-.controls select, .controls button {
+.controls button {
   flex: 1 1 auto;
-  min-height: 40px;
+  min-height: 42px;
   font-size: 14px;
+  font-weight: 600;
   border: 1px solid #d8d3c8;
   border-radius: 10px;
   background: #faf8f3;
@@ -159,7 +248,6 @@ body {
 }
 
 .controls button:active { background: #efeadf; }
-.controls select:disabled { opacity: .55; }
 
 /* Выбор фигуры превращения */
 .promotion {
@@ -167,20 +255,50 @@ body {
   display: flex;
   gap: 8px;
 }
-
 .promotion.hidden { display: none; }
 
 .promotion button {
   flex: 1;
-  min-height: 48px;
-  font-size: 28px;
+  min-height: 52px;
   border: 1px solid #d8d3c8;
   border-radius: 10px;
   background: #faf8f3;
   cursor: pointer;
+  padding: 4px;
 }
-
+.promotion button svg { width: 100%; height: 100%; }
 .promotion button:active { background: #efeadf; }
+
+/* Блок результата */
+.result {
+  margin-top: 10px;
+  text-align: center;
+}
+.result.hidden { display: none; }
+
+.result .result-text {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.result .result-text.win { color: var(--accent); }
+.result .result-text.lose { color: #b3261e; }
+.result .result-text.draw { color: var(--muted); }
+
+.result .result-note { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+.result button {
+  min-height: 44px;
+  width: 100%;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.result button:active { opacity: .9; }
 
 /* История ходов */
 .history-block { margin-top: 12px; }
@@ -215,5 +333,5 @@ body {
 .history .latest { font-weight: 700; }
 
 @media (min-width: 700px) {
-  .piece { font-size: 46px; }
+  .map { grid-template-columns: repeat(5, 1fr); }
 }
