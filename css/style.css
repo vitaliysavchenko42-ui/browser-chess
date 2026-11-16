@@ -1,0 +1,219 @@
+/* Шахматы в браузере — стили. Мобильный приоритет: доска впишется в любой экран. */
+
+:root {
+  --bg: #f4f1ea;
+  --panel: #ffffff;
+  --text: #2b2b2b;
+  --muted: #7a7a72;
+  --accent: #2f6f4f;
+  --light: #eaddc0;   /* светлые клетки */
+  --dark: #a97f56;    /* тёмные клетки */
+  --sel: #e8b33a;     /* выбранная фигура */
+  --dot: rgba(47, 111, 79, .55);   /* точка пустого хода */
+  --ring: rgba(220, 70, 40, .85);  /* кольцо взятия */
+  --check: rgba(220, 40, 40, .8);  /* король под шахом */
+  --last: rgba(232, 179, 58, .35); /* последний ход */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 12px 28px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.brand { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+
+.status {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+.status.check { color: #b3261e; }
+.status.over  { color: var(--accent); }
+
+/* Доска: квадрат, ширина = min(доступная ширина, 520px) */
+.board-zone { display: flex; justify-content: center; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.square.light { background: var(--light); }
+.square.dark  { background: var(--dark); }
+
+/* координаты */
+.square .coord {
+  position: absolute;
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(0,0,0,.35);
+  pointer-events: none;
+}
+.square .coord.file { right: 3px; bottom: 2px; }
+.square .coord.rank { left: 3px; top: 2px; }
+
+.piece {
+  font-size: min(8.2vw, 44px);
+  line-height: 1;
+  pointer-events: none; /* клик ловит клетка */
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+}
+
+.piece.white { color: #fdfdf7; text-shadow: 0 0 1px #333, 0 0 2px #444; }
+.piece.black { color: #1d1d1f; text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+
+.square.selected { box-shadow: inset 0 0 0 3px var(--sel); }
+
+.square .dot {
+  position: absolute;
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--dot);
+  pointer-events: none;
+}
+
+.square .cap-ring {
+  position: absolute;
+  inset: 5%;
+  border: 3px solid var(--ring);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.square.check-glow {
+  box-shadow: inset 0 0 0 3px var(--check);
+}
+
+.square.last-from, .square.last-to {
+  outline: 2px solid var(--last);
+  outline-offset: -2px;
+}
+
+/* Панель управления */
+.panel {
+  margin-top: 12px;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.controls select, .controls button {
+  flex: 1 1 auto;
+  min-height: 40px;
+  font-size: 14px;
+  border: 1px solid #d8d3c8;
+  border-radius: 10px;
+  background: #faf8f3;
+  color: var(--text);
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.controls button:active { background: #efeadf; }
+.controls select:disabled { opacity: .55; }
+
+/* Выбор фигуры превращения */
+.promotion {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.promotion.hidden { display: none; }
+
+.promotion button {
+  flex: 1;
+  min-height: 48px;
+  font-size: 28px;
+  border: 1px solid #d8d3c8;
+  border-radius: 10px;
+  background: #faf8f3;
+  cursor: pointer;
+}
+
+.promotion button:active { background: #efeadf; }
+
+/* История ходов */
+.history-block { margin-top: 12px; }
+.history-title {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.history {
+  margin: 0;
+  padding: 0 0 0 4px;
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history li {
+  display: flex;
+  gap: 10px;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+
+.history li:nth-child(odd) { background: #f6f2e9; }
+.history .num { color: var(--muted); min-width: 30px; text-align: right; }
+.history .w { min-width: 64px; }
+.history .b { min-width: 64px; }
+.history .latest { font-weight: 700; }
+
+@media (min-width: 700px) {
+  .piece { font-size: 46px; }
+}

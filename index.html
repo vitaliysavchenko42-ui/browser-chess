@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шахматы в браузере</title>
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+<main class="wrap">
+  <header class="topbar">
+    <div class="brand">♞ Шахматы</div>
+    <div class="status" id="status">Ход белых</div>
+  </header>
+
+  <section class="board-zone">
+    <div id="board" class="board" aria-label="Шахматная доска"></div>
+  </section>
+
+  <section class="panel">
+    <div class="controls">
+      <select id="mode">
+        <option value="human">Двое игроков</option>
+        <option value="ai">Против компьютера</option>
+      </select>
+      <select id="level" disabled>
+        <option value="1">Компьютер: новичок</option>
+        <option value="2" selected>Компьютер: средний</option>
+        <option value="3">Компьютер: сильный</option>
+      </select>
+      <button id="new-game" type="button">Новая партия</button>
+      <button id="undo" type="button">Отменить ход</button>
+    </div>
+    <div id="promotion" class="promotion hidden"></div>
+    <div class="history-block">
+      <div class="history-title">История ходов</div>
+      <ol id="history" class="history"></ol>
+    </div>
+  </section>
+</main>
+
+<script src="js/rules.js?v=1"></script>
+<script src="js/ai.js?v=1"></script>
+<script src="js/app.js?v=1"></script>
+</body>
+</html>
